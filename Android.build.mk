@@ -101,6 +101,10 @@ LOCAL_C_INCLUDES_arm64 := \
 LOCAL_SRC_FILES_arm64 := \
     $(subst src/arm64,src/aarch64,$(LOCAL_SRC_FILES_arm64))
 
+# Translate ppc to ppc32 in c includes and src files.
+LOCAL_C_INCLUDES_ppc := $(LOCAL_C_INCLUDES_ppc32)
+LOCAL_SRC_FILES_ppc := $(LOCAL_SRC_FILES_ppc32)
+
 ifeq ($(build_type),target)
   include $(BUILD_$(build_target))
 endif

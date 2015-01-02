@@ -42,6 +42,9 @@ common_cflags_target := \
 common_clang_cflags += \
     -Wno-header-guard \
     -Wno-absolute-value \
+    -Wno-tautological-compare \
+    -Wno-pointer-arith \
+    -Wno-shift-count-overflow
 
 ifneq ($(debug),true)
 common_cflags += \
@@ -64,7 +67,7 @@ common_c_includes := \
 
 # Since mips and mips64 use the same source, only generate includes/srcs
 # for the below set of arches.
-generate_arches := arm arm64 mips x86 x86_64
+generate_arches := arm arm64 mips x86 x86_64 ppc32 ppc64
 # The complete list of arches used by Android.build.mk to set arch
 # variables.
 libunwind_arches := $(generate_arches) mips64
@@ -194,15 +197,47 @@ libunwind_src_files_x86_64 += \
 common_c_includes_mips64 := $(LOCAL_PATH)/include/tdep-mips
 libunwind_src_files_mips64 := $(libunwind_src_files_mips)
 
+# fix sources for ppc
+libunwind_src_files_ppc32 := \
+	src/ppc32/is_fpreg.c \
+	src/ppc32/regname.c \
+	src/ppc/Gcreate_addr_space.c \
+	src/ppc/Gget_proc_info.c \
+	src/ppc/Gget_save_loc.c \
+	src/ppc32/Gglobal.c \
+	src/ppc32/Ginit.c \
+	src/ppc/Ginit_local.c \
+	src/ppc/Ginit_remote.c \
+	src/ppc32/Gregs.c \
+	src/ppc32/Gresume.c \
+	src/ppc32/Gstep.c \
+	src/ppc/Gis_signal_frame.c \
+	src/ppc/Lcreate_addr_space.c \
+	src/ppc/Lget_proc_info.c \
+	src/ppc/Lget_save_loc.c \
+	src/ppc32/Lglobal.c \
+	src/ppc32/Linit.c \
+	src/ppc/Linit_local.c \
+	src/ppc/Linit_remote.c \
+	src/ppc32/Lregs.c \
+	src/ppc32/Lresume.c \
+	src/ppc32/Lstep.c \
+	src/ppc/Lis_signal_frame.c \
+	src/ppc32/get_func_addr.c
+
+libunwind_src_files_ppc64 := $(subst ppc32,ppc64,$(libunwind_src_files_ppc32))
+
 # 64-bit architectures
 libunwind_src_files_arm64 += src/elf64.c
 libunwind_src_files_mips64 += src/elf64.c
 libunwind_src_files_x86_64 += src/elf64.c
+libunwind_src_files_ppc64 += src/elf64.c
 
 # 32-bit architectures
 libunwind_src_files_arm   += src/elf32.c
 libunwind_src_files_mips  += src/elf32.c
 libunwind_src_files_x86   += src/elf32.c
+libunwind_src_files_ppc32 += src/elf32.c
 
 libunwind_shared_libraries_target := \
 	libdl \
