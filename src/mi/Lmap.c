@@ -36,6 +36,10 @@ unw_map_local_cursor_get (unw_map_cursor_t *map_cursor)
 {
   intrmask_t saved_mask;
 
+  /* This function can be called before any other unwind code, so make sure
+     the lock has been initialized.  */
+  map_local_init ();
+
   lock_rdwr_wr_acquire (&local_rdwr_lock, saved_mask);
   map_cursor->map_list = local_map_list;
   map_cursor->cur_map = local_map_list;
@@ -56,10 +60,14 @@ unw_map_local_create (void)
   intrmask_t saved_mask;
   int ret_value = 0;
 
+  /* This function can be called before any other unwind code, so make sure
+     the lock has been initialized.  */
+  map_local_init ();
+
   lock_rdwr_wr_acquire (&local_rdwr_lock, saved_mask);
   if (local_map_list_refs == 0)
     {
-      local_map_list = map_create_list (getpid());
+      local_map_list = map_create_list (UNW_MAP_CREATE_LOCAL, getpid());
       if (local_map_list != NULL)
         local_map_list_refs = 1;
       else
@@ -75,6 +83,10 @@ PROTECTED void
 unw_map_local_destroy (void)
 {
   intrmask_t saved_mask;
+
+  /* This function can be called before any other unwind code, so make sure
+     the lock has been initialized.  */
+  map_local_init ();
 
   lock_rdwr_wr_acquire (&local_rdwr_lock, saved_mask);
   if (local_map_list != NULL && --local_map_list_refs == 0)
@@ -95,6 +107,10 @@ unw_map_local_cursor_get_next (unw_map_cursor_t *map_cursor, unw_map_t *unw_map)
   if (map_info == NULL)
     return 0;
 
+  /* This function can be called before any other unwind code, so make sure
+     the lock has been initialized.  */
+  map_local_init ();
+
   lock_rdwr_rd_acquire (&local_rdwr_lock, saved_mask);
   if (map_cursor->map_list != local_map_list)
     {
@@ -105,6 +121,8 @@ unw_map_local_cursor_get_next (unw_map_cursor_t *map_cursor, unw_map_t *unw_map)
     {
       unw_map->start = map_info->start;
       unw_map->end = map_info->end;
+      unw_map->offset = map_info->offset;
+      unw_map->load_base = map_info->load_base;
       unw_map->flags = map_info->flags;
       if (map_info->path)
         unw_map->path = strdup (map_info->path);
